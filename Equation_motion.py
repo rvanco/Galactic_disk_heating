@@ -169,97 +169,125 @@ for i in range(0, len(list_rho)) :
     
     
 
-
-
 #%%
 ###########################################################################################################################
             # Miyamoto-Nagai potential :
 ###########################################################################################################################
 
 
-        # Constants :
-
-
 G = 6.67430   #*10**(-11)       # m^3.kg^−1.s^−2
 M = 10        #**(10) # Solar mass
 a = 2.5
 b = a/20
-R_0 = 1
-Z_0 = 0
-V_0r = 0
-V_0phi = 10
-V_0z = 0
-phi_0 = 0
+z = 0
+epsilon = 0.00001
 
-        # Functions :
+theta_zero = np.pi
+V_R_zero = 0
+V_theta_zero = 0.4
+R_0 = 4
 
-def motion_star (G, M, R, S, Z, V_0r=V_0r, V_0phi=V_0phi, V_0z=V_0z, R_0=R_0, phi_0=phi_0, Z_0=Z_0) :
-    """
-    Motion of an object in a Miyamoto-Nagai potential :
-        Problème car j'ai integré ça comme en cartesien
-    """
-    a_r = - G*M * (R/S**3)
-    a_phi = 0
-    a_z = - G*M * ( Z * (a + np.sqrt(Z**2+b**2)) / (S**3 * np.sqrt(Z**2+b**2)) )
-    V_r = a_r*t + V_0r
-    V_phi = a_phi + V_0phi
-    V_z = a_z*t + V_0z
-    e_r = (1/2)*a_r*t**2 + V_0r*t + R_0
-    e_phi = (1/2)*a_phi*t**2 + V_0phi*t + phi_0
-    e_z = (1/2)*a_z*t**2 + V_0z*t + Z_0
-    
-    return a_r, a_phi, a_z, V_r, V_phi, V_z, e_r, e_phi, e_z
-
-def S_compute (R, Z, a=a, b=b) :
-    
-    S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + Z**2 ) )**2 )
-    
-    return S
-
-        # Motion equation loop :
-
-list_r = []
-list_phi = []
-list_z = []
-T = []
-
-t = 0
-dt = 0.0001 # (sec)
-t_max = 0.02 # sec
-
-R = R_0
-Z = Z_0
-
-while t < t_max+0.0001 :
-    S = S_compute(R, Z)
-    a_r, a_phi, a_z, V_r, V_phi, V_z, R, phi, Z = motion_star (G, M, S, R, Z)
-    
-    list_r += [R]
-    list_phi += [phi]
-    list_z += [Z]
-    T += [t]
-    t += dt
+        # Runge kutta 4 :
 
 
-        # To cartesian :
+def R_pt_pt (R, R_pt, theta, theta_pt, G, M, a, b, z=0) :
+    S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + z**2 ) )**2 )
+    grad_phi_r = G*M * (R/S**3)
+    R_pp = - grad_phi_r + R*(theta_pt**2)
+    return R_pp
 
-list_x = []
-list_y = []
+def theta_pt_pt (R, R_pt, theta, theta_pt, G, M) :
+    theta_pp = - 2*R_pt*theta_pt/R
+    return theta_pp
 
-for i in range(0, len(list_r)) :
-    x, y = cyl2cart(list_r[i], list_phi[i])
-    list_x += [x]
-    list_y+= [y]
+t_max = 15
+dt = 0.05
+nb_star = 15
+r_min = 1
+r_max = 6
+
+limit = r_max + 0.1*r_max
 
 
+x = np.linspace(-limit, limit, 50)
+y = np.linspace(-limit, limit, 50)
+X_pot, Y_pot = np.meshgrid(x, y)
 
-        # Graph
+R = np.sqrt(X_pot**2 + Y_pot**2)
+S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + z**2 ) )**2 )
+Z_pot = - (G*M)/(S)
+
 
 plt.figure()
-plt.xlim(-1, 1)
-plt.ylim(-1, 1)
-plt.plot(list_x,list_y)
+
+
+plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud")
+plt.colorbar()
+
+for i in range(0, nb_star-1) :
+    
+    R = random.uniform(r_min, r_max)
+    theta = random.uniform(0, 2*np.pi)
+
+    V_R = 0
+    V_theta = 1/R
+    t = 0
+
+    
+    list_X = []
+    list_Y = []
+    list_V_R = []
+    list_V_theta = []
+    
+    while t < t_max+epsilon :
+        
+        X, Y = cyl2cart(R, theta)
+        
+        list_X += [X]
+        list_Y += [Y]
+        list_V_R += [V_R]
+        list_V_theta += [V_theta]
+        
+        k_R1 = V_R*dt
+        k_theta1 = V_theta*dt
+        k_VR1 = R_pt_pt(R, V_R, theta, V_theta, G, M, a, b) * dt
+        k_Vtheta1 = theta_pt_pt(R, V_R, theta, V_theta, G, M) * dt
+        
+        k_R2 = (V_R + (1/2)*k_R1) * dt
+        k_theta2 = (V_theta + (1/2)*k_theta1) * dt
+        k_VR2 = R_pt_pt(R+(1/2)*k_R1, V_R+(1/2)*k_VR1, theta+(1/2)*k_theta1, V_theta+(1/2)*k_Vtheta1, G, M, a, b) * dt
+        k_Vtheta2 = theta_pt_pt(R+(1/2)*k_R1, V_R+(1/2)*k_VR1, theta+(1/2)*k_theta1, V_theta+(1/2)*k_Vtheta1, G, M) * dt
+        
+        k_R3 = (V_R + (1/2)*k_R2) * dt
+        k_theta3 = (V_theta + (1/2)*k_theta2) * dt
+        k_VR3 = R_pt_pt(R+(1/2)*k_R2, V_R+(1/2)*k_VR2, theta+(1/2)*k_theta2, V_theta+(1/2)*k_Vtheta2, G, M, a, b) * dt
+        k_Vtheta3 = theta_pt_pt(R+(1/2)*k_R2, V_R+(1/2)*k_VR2, theta+(1/2)*k_theta2, V_theta+(1/2)*k_Vtheta2, G, M) * dt
+        
+        k_R4 = (V_R + k_R3) * dt
+        k_theta4 = (V_theta + k_theta3) * dt
+        k_VR4 = R_pt_pt(R+k_R3, V_R+k_VR3, theta+k_theta3, V_theta+k_Vtheta3, G, M, a, b) * dt
+        k_Vtheta4 = theta_pt_pt(R+k_R3, V_R+k_VR3, theta+k_theta3, V_theta+k_Vtheta3, G, M) * dt
+        
+    
+        R += 1/6 * (k_R1 + 2*k_R2 + 2*k_R3 + k_R4)
+        theta += 1/6 * (k_theta1 + 2*k_theta2 + 2*k_theta3 + k_theta4)
+        V_R += 1/6 * (k_VR1 + 2*k_VR2 + 2*k_VR3 + k_VR4)
+        V_theta += 1/6 * (k_Vtheta1 + 2*k_Vtheta2 + 2*k_Vtheta3 + k_Vtheta4)
+        
+        
+        
+        t += dt
+
+    plt.scatter(list_X, list_Y, s = 2)
+    
+    
+plt.xlim(-limit,limit)
+plt.ylim(-limit,limit)
+
 plt.show()
+#%%
+
+
 
 
 
