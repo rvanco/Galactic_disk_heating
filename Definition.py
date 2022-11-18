@@ -133,7 +133,7 @@ def accel_perturb (R, R_pt, theta_pt, Z, G, M_pot, M_perturb, a, b) :
     S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + Z**2 ) )**2 )
     
     grad_phi_r = (G*M_pot) * (R/S**3)
-    grad_phi_z = G*(M_pot) * ((Z*(a + np.sqrt(b**2 + Z**2))) / ((S**3)*np.sqrt( b**2 + Z**2 )))
+    grad_phi_z = (G*M_pot) * ((Z*(a + np.sqrt(b**2 + Z**2))) / ((S**3)*np.sqrt( b**2 + Z**2 )))
 
     
     R_pp = - grad_phi_r + R*(theta_pt**2)
@@ -150,11 +150,13 @@ def ang_mom(R, theta_dot) :
             # Setting list :
 ###########################################################################################################################
 
-def Setting_list(nb_star) :
+def Setting_list(nb_star_gal, nb_star_perturb) :
     list_X=[]
     list_Y=[]
     list_X_P = []
     list_Y_P = []
+    list_X_SP = []
+    list_Y_SP = []
     
     list_R=[]
     list_theta=[]
@@ -169,11 +171,18 @@ def Setting_list(nb_star) :
     list_V_R_P = []
     list_V_theta_P = []
     list_V_Z_P = []
+
+    list_R_SP = []
+    list_theta_SP = []
+    list_Z_SP = []
+    list_V_R_SP = []
+    list_V_theta_SP = []
+    list_V_Z_SP = []
     
     list_ang_mom_P = []
     list_ang_mom = []
     
-    for i in range(0, nb_star) :
+    for i in range(0, nb_star_gal) :
         list_X.append([])
         list_Y.append([])
     
@@ -185,7 +194,19 @@ def Setting_list(nb_star) :
         list_V_Z.append([])
         list_ang_mom.append([])
         
-    return list_X, list_Y, list_X_P, list_Y_P, list_R, list_theta, list_Z, list_V_R, list_V_theta, list_V_Z, list_R_P, list_theta_P, list_Z_P, list_V_R_P, list_V_theta_P, list_V_Z_P, list_ang_mom, list_ang_mom_P    
+    for i in range(0, nb_star_perturb) :
+        list_X_SP.append([])
+        list_Y_SP.append([])
+    
+        list_R_SP.append([])
+        list_theta_SP.append([])
+        list_Z_SP.append([])
+        list_V_R_SP.append([])
+        list_V_theta_SP.append([])
+        list_V_Z_SP.append([])
+
+        
+    return list_X, list_Y, list_X_P, list_Y_P, list_X_SP, list_Y_SP, list_R, list_theta, list_Z, list_V_R, list_V_theta, list_V_Z, list_R_P, list_theta_P, list_Z_P, list_V_R_P, list_V_theta_P, list_V_Z_P, list_R_SP, list_theta_SP, list_Z_SP, list_V_R_SP, list_V_theta_SP, list_V_Z_SP, list_ang_mom, list_ang_mom_P    
 
 ###########################################################################################################################
             # Initial Position :
@@ -223,19 +244,31 @@ def position_stars_disk(r_bulge, r_disk, i, G, M, a, b) :
     
     return R, theta, Z, V_R, V_theta, V_Z
 
+def position_stars_perturber(r_perturber, theta_perturber, Z_perturber, V_R_perturber, V_theta_perturber, V_Z_perturber, i, G, M_perturb, a, b) :        
+    R = random.uniform(r_perturber-1, r_perturber+1)
+    theta = random.uniform(theta_perturber-10, theta_perturber+10)
+    Z = random.uniform(Z_perturber-1, Z_perturber+1)
+    S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + Z**2 ) )**2 )
+    print(f"R_{i} = ", np.round(R,2), "theta = ", np.round(theta,2), "Z = ", np.round(Z,2))
+    V_R = V_R_perturber
+    V_theta = V_theta_perturber + np.sqrt((G*M_perturb)/S**3)
+    V_Z = V_Z_perturber
+    
+    return R, theta, Z, V_R, V_theta, V_Z
+
 def position_perturber(r_disk, G, M, a, b) :
-    R = 3*r_disk/4
+    R = 0
     theta = np.pi
-    Z = 6
+    Z = 0
     
     S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + Z**2 ) )**2 )
 
     print("R = ", np.round(R,2), "theta = ", np.round(theta,2), "Z = ", np.round(Z,2))
     
     V_R = 0
-    V_theta = np.sqrt((G*M)/S**3)
-    V_Z = 0
-        
+    V_theta = 0 #np.sqrt((G*M)/S**3)
+    V_Z = 0 #-np.sqrt((G*M)/S**3)
+    
     return R, theta, Z, V_R, V_theta, V_Z
 
 def position_strait_perturb() :
@@ -343,18 +376,17 @@ def graph_ang_mom(nb_star, time, list_ang_mom, list_ang_mom_P) :
         plt.scatter(time, list_ang_mom[i]/np.max(list_ang_mom[i]), s=2, color="red")
     #plt.scatter(time, list_ang_mom_P/np.max(list_ang_mom_P), s=2, color="black")
     plt.title('Angular momentum of '+str(nb_star)+' stars \n in a Miyamoto-Nagai potential \n')
-    plt.savefig("/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/Ang_mom_normalized.png")
+    plt.savefig("/home/rvancoellie/Bureau/project_num/Ang_mom_normalized.png")
     plt.show()
 
         # X/Y trajectories in a potential :
 
 def XY_traj(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b, x_lim, y_lim) :
-    #x_lim, y_lim = lim_graph(list_X, list_Y, list_Z)
 
     X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XY(G, M_pot, x_lim, y_lim, a, b)
     
     plt.figure()
-    plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud")
+    plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
     plt.colorbar()  
     for i in range(len(list_X)) :
         plt.scatter(list_X[i], list_Y[i], s = 2)
@@ -369,18 +401,19 @@ def XY_traj(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b,
     plt.ylabel("Y, (kPc)")
     
     plt.title('trajectories of '+str(nb_star)+' stars in a Miyamoto-Nagai potential')
-    plt.savefig("/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/XY_traj.png")
+    plt.savefig("/home/rvancoellie/Bureau/project_num/XY_traj.png")
     
     plt.show()
 
         # X/Z trajectories in a potential :
 
 def XZ_traj(nb_star, list_X, list_Z, list_X_P, list_Z_P, G, M_pot, x_lim, z_lim, a, b) :
+    
+    X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XZ(G, M_pot, x_lim, z_lim, a, b)
+    
     plt.figure()
 
-    X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XZ(G, M_pot, x_lim, z_lim, a, b)
-
-    plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud")
+    plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
     plt.colorbar() 
 
     for i in range(len(list_X)) :
@@ -394,12 +427,12 @@ def XZ_traj(nb_star, list_X, list_Z, list_X_P, list_Z_P, G, M_pot, x_lim, z_lim,
     plt.xlabel("X, (kPc)")
     plt.ylabel("Z, (kPc)")
     plt.title('Trajectories of '+str(nb_star)+' stars in a Miyamoto-Nagai potential')
-    plt.savefig("/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/XZ_traj.png")
+    plt.savefig("/home/rvancoellie/Bureau/project_num/XZ_traj.png")
     plt.show()
 
 
             # XY GIF
-def XY_GIF(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b, x_lim, y_lim, dt, t_max, time) :
+def XY_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, G, M_pot, a, b, x_lim, y_lim, dt, t_max, time) :
     image = []
     
     X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XY(G, M_pot, x_lim, y_lim, a, b)
@@ -408,26 +441,44 @@ def XY_GIF(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b, 
         if j % 10 == 0: 
             plt.figure()
             
-            plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud")
+            red_nb = 0
+            blue_nb = 0
+            
+            plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
             plt.colorbar()  
             
-            for S in range(len(list_X)): # go through each star
-    
-                plt.scatter(list_X[S][j], list_Y[S][j], s = 2, color='red')
+            for S in range(len(list_X)): # go through each star of the galaxy
+                if abs(list_Z_P[j]) > 10 :
+                    if abs(list_Z[S][j]) > abs((2/3)*list_Z_P[j]) :
+                        plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='blue')
+                        blue_nb += 1
+                    else :
+                        plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='red')
+                        red_nb += 1
+                else :
+                    plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='red')
+                    red_nb = nb_star
+                    
+            for S in range(len(list_X_SP)) : # go through each star of the perturber
+                plt.scatter(list_X_SP[S][j], list_Y_SP[S][j], s = 1, color='violet')
                 
-                plt.xlim(-x_lim, x_lim)
-                plt.ylim(-y_lim, y_lim)
+            plt.xlim(-x_lim, x_lim)
+            plt.ylim(-y_lim, y_lim)
             
             plt.scatter(list_X_P[j], list_Y_P[j], s = 20, color='black')
-            
+
+            plt.scatter(x_lim+1, y_lim+1, s = 1, color='red', label=f"in the disk ({red_nb})")
+            plt.scatter(x_lim+1, y_lim+1, s = 1, color='blue', label=f"out of the disk ({blue_nb})")
+            plt.scatter(x_lim+1, y_lim+1, s = 1, color='violet', label=f"perturber stars")
             
             plt.text(x_lim,y_lim, "time="+str(round(time[j]/1000, 4))+"Gy")
 
             plt.title('Orbites of '+str(nb_star)+' stars in a Miyamoto-Nagai potential \n')
             plt.xlabel("X, (kPc)")
             plt.ylabel("Y, (kPc)")		
-    				
-            filename=f'/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/Plot_traj/{j/10}.png'
+            plt.legend(loc='upper right')
+            
+            filename=f'/home/rvancoellie/Bureau/project_num/Plot_traj/{j/10}.png'
             plt.savefig(filename)
             
             image.append(imageio.imread(filename))
@@ -436,7 +487,7 @@ def XY_GIF(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b, 
             print('XY scatter at t = '+str(j*dt), "over " + str(t_max), " done")
     
 
-    exportname = "/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/XY.gif"
+    exportname = "/home/rvancoellie/Bureau/project_num/XY.gif"
     kargs = { 'duration': 0.1 }
     imageio.mimsave(exportname, image, 'GIF', **kargs)
     print("The .gif is finish :)")
@@ -445,7 +496,7 @@ def XY_GIF(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b, 
 
             # XZ GIF
 
-def XZ_GIF(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, list_Z_P, G, M_pot, a, b, x_lim, z_lim, dt, t_max, time) :
+def XZ_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, G, M_pot, a, b, x_lim, z_lim, dt, t_max, time) :
     image = []
     
     X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XZ(G, M_pot, x_lim, z_lim, a, b)
@@ -455,24 +506,43 @@ def XZ_GIF(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, list_Z_P, G, M_p
         if j % 10 == 0: 
             plt.figure()
             
-            plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud")
+            red_nb = 0
+            blue_nb = 0
+            
+            plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
             plt.colorbar()  
             
             for S in range(len(list_X)): # go through each star
-    
-                plt.scatter(list_X[S][j], list_Z[S][j], s = 2, color='red')
+                if abs(list_Z_P[j]) > 10 :
+                    if abs(list_Z[S][j]) > abs((2/3)*list_Z_P[j]) :
+                        plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='blue')
+                        blue_nb += 1
+                    else :
+                        plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='red')
+                        red_nb += 1
+                else :
+                    plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='red')
+                    red_nb = nb_star
+            
+            for S in range(len(list_X_SP)) : # go through each star of the perturber
+                plt.scatter(list_X_SP[S][j], list_Z_SP[S][j], s = 10, color='violet')
+            
+            plt.xlim(-x_lim, x_lim)
+            plt.ylim(-z_lim, z_lim)
                 
-                plt.xlim(-x_lim, x_lim)
-                plt.ylim(-z_lim, z_lim)
-                
-            plt.scatter(list_X_P[j], list_Z_P[j], s = 20, color='black')
+            plt.scatter(list_X_P[j], list_Z_P[j], s = 20, color='black', zorder = -1)
 
+            plt.scatter(x_lim+1, z_lim+1, s = 1, color='red', label=f"in the disk ({red_nb})")
+            plt.scatter(x_lim+1, z_lim+1, s = 1, color='blue', label=f"out of the disk ({blue_nb})")
+            plt.scatter(x_lim+1, z_lim+1, s = 1, color='violet', label=f"perturber stars")
+            
             plt.text(x_lim,z_lim, "time="+str(round(time[j]/1000, 4))+"Gy")
             plt.title('Orbites of '+str(nb_star)+' stars in a Miyamoto-Nagai potential \n')
             plt.xlabel("X, (kPc)")
-            plt.ylabel("Z, (kPc)")	
+            plt.ylabel("Z, (kPc)")
+            plt.legend(loc='upper right')
     					
-            filename=f'/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/Plot_traj/{j/10}.png'
+            filename=f'/home/rvancoellie/Bureau/project_num/Plot_traj/{j/10}.png'
             plt.savefig(filename)
             
             image.append(imageio.imread(filename))
@@ -481,7 +551,7 @@ def XZ_GIF(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, list_Z_P, G, M_p
             print('XZ scatter at t = '+str(j*dt), "over " + str(t_max), " done")
     
     
-    exportname = "/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/XZ.gif"
+    exportname = "/home/rvancoellie/Bureau/project_num/XZ.gif"
     kargs = { 'duration': 0.1 }
     imageio.mimsave(exportname, image, 'GIF', **kargs)
     
@@ -503,13 +573,13 @@ def XYZ_GIF (list_X, list_Y, list_Z, list_X_P, list_Y_P, list_Z_P, x_lim, y_lim,
             
             for S in range(len(list_X)): # go through each star
                 
-                ax.scatter(list_X[S][j], list_Y[S][j], list_Z[S][j], s = 2, color='red')
+                ax.scatter(list_X[S][j], list_Y[S][j], list_Z[S][j], s = 1, color='red')
                 
                 plt.xlim(-x_lim, x_lim)
                 plt.ylim(-y_lim, y_lim)
                 ax.set_zlim(-z_lim, z_lim)
                 
-            ax.scatter(list_X_P[j], list_Y_P[j], list_Z_P[j], s = 2, color='black')
+            ax.scatter(list_X_P[j], list_Y_P[j], list_Z_P[j], s = 10, color='black')
             ax.scatter(0,0,0, s=30, color ='purple')
             
             plt.title('Orbites of '+str(nb_star)+' stars in a Miyamoto-Nagai potential \n')
@@ -520,7 +590,7 @@ def XYZ_GIF (list_X, list_Y, list_Z, list_X_P, list_Y_P, list_Z_P, x_lim, y_lim,
             
             ax.text(x_lim/2, y_lim, z_lim, "time"+str(round(time[j]/1000, 4))+"Gy")
             
-            filename=f'/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/Plot_traj/{j/10}.png'
+            filename=f'/home/rvancoellie/Bureau/project_num/Plot_traj/{j/10}.png'
 
             plt.savefig(filename)
             
@@ -530,51 +600,9 @@ def XYZ_GIF (list_X, list_Y, list_Z, list_X_P, list_Y_P, list_Z_P, x_lim, y_lim,
             plt.close()
             print('XYZ scatter at t = '+str(j*dt), "over " + str(t_max), " done")
     
-    exportname = "/Users/renaudvanco/Documents/Etude/Master/S3/Numerical_simulation/XYZ.gif"
+    exportname = "/home/rvancoellie/Bureau/project_num/XYZ.gif"
     kargs = { 'duration': 0.1 }
     imageio.mimsave(exportname, image, 'GIF', **kargs)
 
     print("The .gif is finish :)")
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
 
