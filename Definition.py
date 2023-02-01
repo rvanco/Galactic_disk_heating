@@ -21,19 +21,6 @@ import os
             # Usefull definition :
 ###########################################################################################################################
 
-        # Limits of the graph
-
-def lim_graph(list_X, list_Y, list_Z) :
-    x_max = np.max(list_X) + 0.1*np.max(list_X)
-    x_min = np.min(list_X) + 0.1*np.min(list_X)
-    x_lim = max([x_max, abs(x_min)])
-    
-    y_max = np.max(list_Y) + 0.1*np.max(list_Y)
-    y_min = np.min(list_Y) + 0.1*np.min(list_Y)
-    y_lim = max([y_max, abs(y_min)])
-    
-    return x_lim, y_lim
-
         # Switch between cartesian and polar coordinate :
 
 def cart2cyl(x, y, z):
@@ -100,32 +87,21 @@ def Miyamoto_Nagai_XY(G, M_pot, x_lim, y_lim, a, b) :
     return X_pot, Y_pot, Z_pot
 
 def accel_star(R_S, R_BH, R_BH_R, R_P, R_pt, theta_P, theta_S, theta_pt, Z_S, Z_P, G, M_pot, M_star, M_perturb, a, b) :
+
     S = np.sqrt( R_S**2 + ( a**2 + np.sqrt( b**2 + Z_S**2 ) )**2 )
+    S_P = np.sqrt( R_P**2 + ( a**2 + np.sqrt( b**2 + Z_P**2 ) )**2 )
     
-    grad_phi_r = (G*M_pot) * (R_S/S**3)
-    grad_phi_z = (G*M_pot) * ((Z_S*(a + np.sqrt(b**2 + Z_S**2))) / ((S**3)*np.sqrt( b**2 + Z_S**2 )))
-
-    delta_Z = Z_P - Z_S
-    R_R = np.sqrt(R_BH**2 - delta_Z**2)
-
-    theta_S_BH = np.pi - np.arccos((R_S**2 + R_R**2 - R_P**2)/(2*R_S*R_R))
-
-    if np.isnan(theta_S_BH) == True :
-        if R_S >= R_P :
-            theta_S_BH = np.pi
-        else :
-            theta_S_BH = 0
-        
-    theta_Z = np.arccos((delta_Z**2 + R_BH**2 - R_R**2)/(2*delta_Z*R_BH))
+    grad_phi_r = - (G*M_pot) * (R_S/S**3)
+    grad_phi_z = - (G*M_pot) * ((Z_S*(a + np.sqrt(b**2 + Z_S**2))) / ((S**3)*np.sqrt( b**2 + Z_S**2 )))
 
 
-    Perturber_R = (G*M_perturb/(R_BH+0.1)**2) * np.sin(theta_Z) * np.cos(theta_S_BH)
-    Perturber_Z = (G*M_perturb/(R_BH+0.1)**2) * np.cos(theta_Z)
-    Perturber_theta = 0
-
-    R_pp = - grad_phi_r + R_S*(theta_pt**2) + Perturber_R
-    theta_pp = - 2*R_pt*theta_pt/R_S + Perturber_theta 
-    Z_pp = - grad_phi_z + Perturber_Z
+    Perturber_R = (G*M_perturb) * (R_S - R_P*np.cos(theta_S - theta_P)) / (S_P**3)
+    Perturber_theta = (G*M_perturb) * (R_P*np.sin(theta_S - theta_P)) / (S_P**3)
+    Perturber_Z = (G*M_perturb) * ((Z_S-Z_P)*(b + np.sqrt(b**2 + (Z_S-Z_P)**2))) / ((S**3)*np.sqrt( b**2 + (Z_S-Z_P)**2 ))
+    
+    R_pp = grad_phi_r + R_S*(theta_pt**2) - Perturber_R
+    theta_pp = -2*R_pt*theta_pt/R_S - Perturber_theta/R_S
+    Z_pp = grad_phi_z - Perturber_Z
     
     return np.array([R_pp, theta_pp, Z_pp])
 
@@ -151,36 +127,22 @@ def ang_mom(R, theta_dot) :
 ###########################################################################################################################
 
 def Setting_list(nb_star_gal, nb_star_perturb) :
-    list_X=[]
-    list_Y=[]
-    list_X_P = []
-    list_Y_P = []
-    list_X_SP = []
-    list_Y_SP = []
+    list_X, list_Y = [], []
+    list_X_P, list_Y_P = [], []
+    list_X_SP, list_Y_SP = [], []
     
-    list_R=[]
-    list_theta=[]
-    list_Z=[]
-    list_V_R=[]
-    list_V_theta=[]
-    list_V_Z=[]
-    
-    list_R_P = []
-    list_theta_P = []
-    list_Z_P = []
-    list_V_R_P = []
-    list_V_theta_P = []
-    list_V_Z_P = []
+    list_R, list_theta, list_Z = [], [], []
+    list_V_R, list_V_theta, list_V_Z = [], [], []
 
-    list_R_SP = []
-    list_theta_SP = []
-    list_Z_SP = []
-    list_V_R_SP = []
-    list_V_theta_SP = []
-    list_V_Z_SP = []
+    list_R_P, list_theta_P, list_Z_P = [], [], []
+    list_V_R_P, list_V_theta_P, list_V_Z_P = [], [], []
+
+    list_R_SP, list_theta_SP, list_Z_SP = [], [], []
+    list_V_R_SP, list_V_theta_SP, list_V_Z_SP = [], [], []
     
-    list_ang_mom_P = []
-    list_ang_mom = []
+    list_R_BH, list_R_BH_SP = [], []
+    
+    list_ang_mom_P, list_ang_mom = [], []
     
     for i in range(0, nb_star_gal) :
         list_X.append([])
@@ -192,6 +154,7 @@ def Setting_list(nb_star_gal, nb_star_perturb) :
         list_V_R.append([])
         list_V_theta.append([])
         list_V_Z.append([])
+        list_R_BH.append([])
         list_ang_mom.append([])
         
     for i in range(0, nb_star_perturb) :
@@ -204,9 +167,11 @@ def Setting_list(nb_star_gal, nb_star_perturb) :
         list_V_R_SP.append([])
         list_V_theta_SP.append([])
         list_V_Z_SP.append([])
+        list_R_BH_SP.append([])
 
         
-    return list_X, list_Y, list_X_P, list_Y_P, list_X_SP, list_Y_SP, list_R, list_theta, list_Z, list_V_R, list_V_theta, list_V_Z, list_R_P, list_theta_P, list_Z_P, list_V_R_P, list_V_theta_P, list_V_Z_P, list_R_SP, list_theta_SP, list_Z_SP, list_V_R_SP, list_V_theta_SP, list_V_Z_SP, list_ang_mom, list_ang_mom_P    
+    return list_X, list_Y, list_X_P, list_Y_P, list_X_SP, list_Y_SP, list_R, list_theta, list_Z, list_V_R, list_V_theta, list_V_Z, list_R_P, list_theta_P, list_Z_P, list_V_R_P, list_V_theta_P, list_V_Z_P, list_R_SP, list_theta_SP, list_Z_SP, list_V_R_SP, list_V_theta_SP, list_V_Z_SP, list_R_BH, list_R_BH_SP, list_ang_mom, list_ang_mom_P
+    
 
 ###########################################################################################################################
             # Initial Position :
@@ -222,7 +187,7 @@ def position_stars_bulge(r_bulge, i, G, M, a, b) :
     S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + Z**2 ) )**2 )
 
     V_R = 0
-    V_theta = np.sqrt((G*M)/S**3) #0.1/(R+0.1)
+    V_theta = np.sqrt((G*M)/S**3)
     V_Z = 0
         
     print(f"R_{i} = ", np.round(R,2), "theta = ", np.round(theta,2), "Z = ", np.round(Z,2))
@@ -239,46 +204,36 @@ def position_stars_disk(r_bulge, r_disk, i, G, M, a, b) :
 
     print(f"R_{i} = ", np.round(R,2), "theta = ", np.round(theta,2), "Z = ", np.round(Z,2))
     V_R = 0
-    V_theta = np.sqrt((G*M)/S**3) #0.14/R
+    V_theta = np.sqrt((G*M)/S**3)
     V_Z = 0
     
     return R, theta, Z, V_R, V_theta, V_Z
 
 def position_stars_perturber(r_perturber, theta_perturber, Z_perturber, V_R_perturber, V_theta_perturber, V_Z_perturber, i, G, M_perturb, a, b) :        
     R = random.uniform(r_perturber-1, r_perturber+1)
-    theta = random.uniform(theta_perturber-10, theta_perturber+10)
+    theta = random.uniform(theta_perturber-theta_perturber*2/100, theta_perturber+theta_perturber*2/100)
     Z = random.uniform(Z_perturber-1, Z_perturber+1)
     S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + Z**2 ) )**2 )
     print(f"R_{i} = ", np.round(R,2), "theta = ", np.round(theta,2), "Z = ", np.round(Z,2))
     V_R = V_R_perturber
-    V_theta = V_theta_perturber + np.sqrt((G*M_perturb)/S**3)
+    V_theta = V_theta_perturber #+ np.sqrt((G*M_perturb)/S**3)
     V_Z = V_Z_perturber
     
     return R, theta, Z, V_R, V_theta, V_Z
 
 def position_perturber(r_disk, G, M, a, b) :
     R = 0
-    theta = np.pi
-    Z = 0
-    
+    theta = 0
+    Z = 30
     S = np.sqrt( R**2 + ( a**2 + np.sqrt( b**2 + Z**2 ) )**2 )
-
-    print("R = ", np.round(R,2), "theta = ", np.round(theta,2), "Z = ", np.round(Z,2))
     
     V_R = 0
-    V_theta = 0 #np.sqrt((G*M)/S**3)
-    V_Z = 0 #-np.sqrt((G*M)/S**3)
+    V_theta = 0
+    V_Z = 0
+
     
     return R, theta, Z, V_R, V_theta, V_Z
 
-def position_strait_perturb() :
-    X_P = 0
-    Y_P = 15
-    Z_P = 10
-    V_X_P = 0
-    V_Y_P = 0
-    V_Z_P = -0.01
-    return X_P, Y_P, Z_P, V_X_P, V_Y_P, V_Z_P
 
 ###########################################################################################################################
             # Integration :
@@ -348,20 +303,29 @@ def RK4_perturber(G, M_pot, M_perturb, a, b, dt, R, theta, Z, V_R, V_theta, V_Z)
     
     return R, theta, Z, V_R, V_theta, V_Z
 
-def strait_perturb(X_P, Y_P, Z_P, V_X_P, V_Y_P, V_Z_P, dt) :
-    X = X_P + V_X_P*dt
-    Y = Y_P + V_Y_P*dt
-    Z = Z_P + V_Z_P*dt
 
-    return X, Y, Z
+###########################################################################################################################
+            # Radius check :
+###########################################################################################################################
 
-def rotating_perturb(R_P, theta_P, Z_P, V_theta_P, dt) :
-    R = R_P
-    theta = theta_P + V_theta_P*dt
-    Z = Z_P
-
-    return R, theta, Z
-
+def radii_graph(list_R, time):
+    plt.figure()
+    
+    plt.plot(time, np.array(list_R[0])/list_R[0][0], label="2:1 resonance")
+    plt.plot(time, np.array(list_R[1])/list_R[1][0], label="4:1 resonance")
+    #plt.plot(time, np.array(list_R[2])/list_R[2][0], label="4:1 resonance")
+    
+    plt.xlabel("Time, (My)")
+    plt.ylabel("R/$R_{start}$")
+        
+    plt.legend()
+    
+    plt.title('Different resonances in a Miyamoto-Nagai potential')
+    plt.savefig("/home/rvancoellie/Bureau/project_num/resonnace_traj.png")
+    
+    plt.show()
+    
+    
 ###########################################################################################################################
             # Visualisation 2D :
 ###########################################################################################################################
@@ -387,7 +351,7 @@ def XY_traj(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b,
     
     plt.figure()
     plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
-    plt.colorbar()  
+    #plt.colorbar()  
     for i in range(len(list_X)) :
         plt.scatter(list_X[i], list_Y[i], s = 2)
     
@@ -432,10 +396,10 @@ def XZ_traj(nb_star, list_X, list_Z, list_X_P, list_Z_P, G, M_pot, x_lim, z_lim,
 
 
             # XY GIF
-def XY_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, G, M_pot, a, b, x_lim, y_lim, dt, t_max, time) :
+def XY_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, list_V_R, list_V_theta, list_V_Z, list_R_BH, G, M_pot, M_pert, a, b, x_lim, y_lim, dt, t_max, time) :
     image = []
     
-    X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XY(G, M_pot, x_lim, y_lim, a, b)
+    #X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XY(G, M_pot, x_lim, y_lim, a, b)
     
     for j in range(len(list_X[0])): # go through each time step
         if j % 10 == 0: 
@@ -444,32 +408,45 @@ def XY_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, li
             red_nb = 0
             blue_nb = 0
             
-            plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
-            plt.colorbar()  
+            #plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
+            #plt.colorbar()  
             
             for S in range(len(list_X)): # go through each star of the galaxy
-                if abs(list_Z_P[j]) > 10 :
-                    if abs(list_Z[S][j]) > abs((2/3)*list_Z_P[j]) :
-                        plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='blue')
-                        blue_nb += 1
+                if abs(list_Z_P[j]) > 20 :
+                    E_p = -(G*M_pert)/(list_R_BH[S][j])
+                    V = list_V_R[S][j] + list_V_theta[S][j] + list_V_Z[S][j]
+                    E_c = (1/2) * V**2
+                    if E_p + E_c < 0 : # If the Energy of the star is negative it is trap in the perturber potential
+                        F_p = abs((G*M_pert)/(list_R_BH[S][j])**2)
+                        S_ = np.sqrt( list_X[S][j]**2 + ( a**2 + np.sqrt( b**2 + list_Z[S][j]**2 ) )**2 )
+    
+                        grad_phi_r = abs((G*M_pot) * (list_X[S][j]/S_**3))
+                        grad_phi_z = abs((G*M_pot) * ((list_Z[S][j]*(a + np.sqrt(b**2 + list_Z[S][j]**2))) / ((S_**3)*np.sqrt( b**2 + list_Z[S][j]**2 ))))
+                        F_g = grad_phi_r + grad_phi_z
+                        if F_p > F_g : # If the star more attracted by the perturber
+                            plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='blue')
+                            blue_nb += 1
+                        else :
+                            plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='red')
+                            red_nb += 1
                     else :
                         plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='red')
                         red_nb += 1
                 else :
                     plt.scatter(list_X[S][j], list_Y[S][j], s = 1, color='red')
-                    red_nb = nb_star
-                    
+                    red_nb += 1
+       
             for S in range(len(list_X_SP)) : # go through each star of the perturber
-                plt.scatter(list_X_SP[S][j], list_Y_SP[S][j], s = 1, color='violet')
+                plt.scatter(list_X_SP[S][j], list_Y_SP[S][j], s = 1, color='blue')
                 
             plt.xlim(-x_lim, x_lim)
             plt.ylim(-y_lim, y_lim)
             
             plt.scatter(list_X_P[j], list_Y_P[j], s = 20, color='black')
 
-            plt.scatter(x_lim+1, y_lim+1, s = 1, color='red', label=f"in the disk ({red_nb})")
-            plt.scatter(x_lim+1, y_lim+1, s = 1, color='blue', label=f"out of the disk ({blue_nb})")
-            plt.scatter(x_lim+1, y_lim+1, s = 1, color='violet', label=f"perturber stars")
+            plt.scatter(x_lim+1, y_lim+1, s = 1, color='red', label=f"Galaxy stars ({red_nb})")
+            #plt.scatter(x_lim+1, y_lim+1, s = 1, color='blue', label=f"Bound to the perturber ({blue_nb})")
+            plt.scatter(x_lim+1, y_lim+1, s = 1, color='blue', label=f"Perturber stars ({len(list_X_SP)})")
             
             plt.text(x_lim,y_lim, "time="+str(round(time[j]/1000, 4))+"Gy")
 
@@ -496,10 +473,10 @@ def XY_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, li
 
             # XZ GIF
 
-def XZ_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, G, M_pot, a, b, x_lim, z_lim, dt, t_max, time) :
+def XZ_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, list_V_R, list_V_theta, list_V_Z, list_R_BH, G, M_pot, M_pert, a, b, x_lim, z_lim, dt, t_max, time) :
     image = []
     
-    X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XZ(G, M_pot, x_lim, z_lim, a, b)
+    #X_pot, Y_pot, Z_pot = Miyamoto_Nagai_XZ(G, M_pot, x_lim, z_lim, a, b)
 
     
     for j in range(len(list_X[0])): # go through each time step
@@ -509,32 +486,46 @@ def XZ_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, li
             red_nb = 0
             blue_nb = 0
             
-            plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
-            plt.colorbar()  
+            #plt.pcolormesh(X_pot, Y_pot, Z_pot, shading="gouraud", zorder=-1)
+            #plt.colorbar()  
             
-            for S in range(len(list_X)): # go through each star
-                if abs(list_Z_P[j]) > 10 :
-                    if abs(list_Z[S][j]) > abs((2/3)*list_Z_P[j]) :
-                        plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='blue')
-                        blue_nb += 1
+            for S in range(len(list_X)): # go through each star of the galaxy
+                if abs(list_Z_P[j]) > 20 :
+                    E_p = -(G*M_pert)/(list_R_BH[S][j])
+                    V = list_V_R[S][j] + list_V_theta[S][j] + list_V_Z[S][j]
+                    E_c = (1/2) * V**2
+                    if E_p + E_c < 0 : # If the Energy of the star is negative it is trap in the perturber potential
+                        F_p = abs((G*M_pert)/(list_R_BH[S][j])**2)
+                        S_ = np.sqrt( list_X[S][j]**2 + ( a**2 + np.sqrt( b**2 + list_Z[S][j]**2 ) )**2 )
+    
+                        grad_phi_r = abs((G*M_pot) * (list_X[S][j]/S_**3))
+                        grad_phi_z = abs((G*M_pot) * ((list_Z[S][j]*(a + np.sqrt(b**2 + list_Z[S][j]**2))) / ((S_**3)*np.sqrt( b**2 + list_Z[S][j]**2 ))))
+                        F_g = grad_phi_r + grad_phi_z
+                    
+                        if F_p > F_g : # If the star more attracted by the perturber
+                            plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='blue')
+                            blue_nb += 1
+                        else :
+                            plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='red')
+                            red_nb += 1
                     else :
                         plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='red')
                         red_nb += 1
                 else :
                     plt.scatter(list_X[S][j], list_Z[S][j], s = 1, color='red')
-                    red_nb = nb_star
-            
+                    red_nb += 1
+       
             for S in range(len(list_X_SP)) : # go through each star of the perturber
-                plt.scatter(list_X_SP[S][j], list_Z_SP[S][j], s = 10, color='violet')
+                plt.scatter(list_X_SP[S][j], list_Z_SP[S][j], s = 1, color='blue')
             
             plt.xlim(-x_lim, x_lim)
             plt.ylim(-z_lim, z_lim)
                 
             plt.scatter(list_X_P[j], list_Z_P[j], s = 20, color='black', zorder = -1)
 
-            plt.scatter(x_lim+1, z_lim+1, s = 1, color='red', label=f"in the disk ({red_nb})")
-            plt.scatter(x_lim+1, z_lim+1, s = 1, color='blue', label=f"out of the disk ({blue_nb})")
-            plt.scatter(x_lim+1, z_lim+1, s = 1, color='violet', label=f"perturber stars")
+            plt.scatter(x_lim+1, z_lim+1, s = 1, color='red', label=f"Galaxy stars ({red_nb})")
+            #plt.scatter(x_lim+1, z_lim+1, s = 1, color='blue', label=f"Bound to the perturber ({blue_nb})")
+            plt.scatter(x_lim+1, z_lim+1, s = 1, color='blue', label=f"Perturber stars ({len(list_X_SP)})")
             
             plt.text(x_lim,z_lim, "time="+str(round(time[j]/1000, 4))+"Gy")
             plt.title('Orbites of '+str(nb_star)+' stars in a Miyamoto-Nagai potential \n')
