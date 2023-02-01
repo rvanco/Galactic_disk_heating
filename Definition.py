@@ -321,7 +321,7 @@ def radii_graph(list_R, time):
     plt.legend()
     
     plt.title('Different resonances in a Miyamoto-Nagai potential')
-    plt.savefig("/home/rvancoellie/Bureau/project_num/resonnace_traj.png")
+    plt.savefig(".png")
     
     plt.show()
     
@@ -340,7 +340,7 @@ def graph_ang_mom(nb_star, time, list_ang_mom, list_ang_mom_P) :
         plt.scatter(time, list_ang_mom[i]/np.max(list_ang_mom[i]), s=2, color="red")
     #plt.scatter(time, list_ang_mom_P/np.max(list_ang_mom_P), s=2, color="black")
     plt.title('Angular momentum of '+str(nb_star)+' stars \n in a Miyamoto-Nagai potential \n')
-    plt.savefig("/home/rvancoellie/Bureau/project_num/Ang_mom_normalized.png")
+    plt.savefig(".png")
     plt.show()
 
         # X/Y trajectories in a potential :
@@ -365,7 +365,7 @@ def XY_traj(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b,
     plt.ylabel("Y, (kPc)")
     
     plt.title('trajectories of '+str(nb_star)+' stars in a Miyamoto-Nagai potential')
-    plt.savefig("/home/rvancoellie/Bureau/project_num/XY_traj.png")
+    plt.savefig(".png")
     
     plt.show()
 
@@ -391,7 +391,7 @@ def XZ_traj(nb_star, list_X, list_Z, list_X_P, list_Z_P, G, M_pot, x_lim, z_lim,
     plt.xlabel("X, (kPc)")
     plt.ylabel("Z, (kPc)")
     plt.title('Trajectories of '+str(nb_star)+' stars in a Miyamoto-Nagai potential')
-    plt.savefig("/home/rvancoellie/Bureau/project_num/XZ_traj.png")
+    plt.savefig(".png")
     plt.show()
 
 
@@ -455,7 +455,7 @@ def XY_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, li
             plt.ylabel("Y, (kPc)")		
             plt.legend(loc='upper right')
             
-            filename=f'/home/rvancoellie/Bureau/project_num/Plot_traj/{j/10}.png'
+            filename=f'{j/10}.png'
             plt.savefig(filename)
             
             image.append(imageio.imread(filename))
@@ -533,7 +533,7 @@ def XZ_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, li
             plt.ylabel("Z, (kPc)")
             plt.legend(loc='upper right')
     					
-            filename=f'/home/rvancoellie/Bureau/project_num/Plot_traj/{j/10}.png'
+            filename=f'{j/10}.png'
             plt.savefig(filename)
             
             image.append(imageio.imread(filename))
@@ -581,7 +581,7 @@ def XYZ_GIF (list_X, list_Y, list_Z, list_X_P, list_Y_P, list_Z_P, x_lim, y_lim,
             
             ax.text(x_lim/2, y_lim, z_lim, "time"+str(round(time[j]/1000, 4))+"Gy")
             
-            filename=f'/home/rvancoellie/Bureau/project_num/Plot_traj/{j/10}.png'
+            filename=f'{j/10}.png'
 
             plt.savefig(filename)
             
