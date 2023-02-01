@@ -13,12 +13,12 @@ import numpy as np
 
         # Potential :
     
-G = 4*10**(-12) # kPc^3.M_s^-1.By^-2,    6.67430*10**(-11) m^3.kg^−1.s^−2
+G = 4*10**(-12) # kPc^3.M_s^-1.By^-2
 M_pot = 4*10**(9) # Solar mass
 a = 2.5   # kPc
 b = a/20
 # Perturber :
-M_perturb = M_pot/100 #10**(9) # Solar mass
+M_perturb = M_pot/100 # Solar mass
 # Star :
 M_star = 1 # Solar mass
 
@@ -66,7 +66,7 @@ for i in range(0, nb_star_bulge) :
     list_V_theta[i].append(V_theta)
     list_V_Z[i].append(V_Z)
     list_R_BH[i].append(R_BH)
-#    list_ang_mom[i].append(Df.ang_mom(R, V_theta))
+    list_ang_mom[i].append(Df.ang_mom(R, V_theta))
 
 print("Disk generation : ")
 for i in range(nb_star_bulge, nb_star_gal) :
@@ -80,7 +80,7 @@ for i in range(nb_star_bulge, nb_star_gal) :
     list_V_theta[i].append(V_theta)
     list_V_Z[i].append(V_Z)
     list_R_BH[i].append(R_BH)
-#    list_ang_mom[i].append(Df.ang_mom(R, V_theta))
+    list_ang_mom[i].append(Df.ang_mom(R, V_theta))
 
 print("Perturber generation : ")
 for i in range(0, nb_star_perturber) :
@@ -94,7 +94,7 @@ for i in range(0, nb_star_perturber) :
     list_V_theta_SP[i].append(V_theta)
     list_V_Z_SP[i].append(V_Z)
     list_R_BH_SP[i].append(R_BH)
-#    list_ang_mom[i].append(Df.ang_mom(R, V_theta))
+    list_ang_mom[i].append(Df.ang_mom(R, V_theta))
 
 
 			# Integration :
@@ -152,7 +152,7 @@ while t < t_max+epsilon :
     list_V_R_P.append(V_R_P)
     list_V_theta_P.append(V_theta_P)
     list_V_Z_P.append(V_Z_P)
-    #list_ang_mom_P.append(Df.ang_mom(R_P, V_theta_P))
+    list_ang_mom_P.append(Df.ang_mom(R_P, V_theta_P))
 
     j += 1
     t += dt
@@ -186,10 +186,10 @@ for j in range(0, len(list_R_P)):
 ###########################################################################################################################
 x_lim, y_lim, z_lim = 50, 50, 30
 
-#Df.graph_ang_mom(nb_star, time, list_ang_mom, list_ang_mom_P)
-#Df.XY_traj(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b, x_lim, y_lim)
-#Df.XZ_traj(nb_star, list_X, list_Z, list_X_P, list_Z_P, G, M_pot, x_lim, z_lim, a, b)
-#Df.radii_graph(list_R, time)
+Df.graph_ang_mom(nb_star, time, list_ang_mom, list_ang_mom_P)
+Df.XY_traj(nb_star, list_X, list_X_P, list_Y, list_Y_P, list_Z, G, M_pot, a, b, x_lim, y_lim)
+Df.XZ_traj(nb_star, list_X, list_Z, list_X_P, list_Z_P, G, M_pot, x_lim, z_lim, a, b)
+Df.radii_graph(list_R, time)
 
 Df.XY_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, list_V_R, list_V_theta, list_V_Z, list_R_BH, G, M_pot, M_perturb, a, b, x_lim, y_lim, dt, t_max, time)
 Df.XZ_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, list_Z, list_Z_P, list_Z_SP, list_V_R, list_V_theta, list_V_Z, list_R_BH, G, M_pot, M_perturb, a, b, x_lim, z_lim, dt, t_max, time)
@@ -198,7 +198,7 @@ Df.XZ_GIF(nb_star, list_X, list_X_P, list_X_SP, list_Y, list_Y_P, list_Y_SP, lis
             # Visualisation 3D :
 ###########################################################################################################################
 
-#Df.XYZ_GIF(list_X, list_Y, list_Z, list_X_P, list_Y_P, list_Z_P, x_lim, y_lim, z_lim, nb_star, dt, t_max, time)
+Df.XYZ_GIF(list_X, list_Y, list_Z, list_X_P, list_Y_P, list_Z_P, x_lim, y_lim, z_lim, nb_star, dt, t_max, time)
 
 
 
